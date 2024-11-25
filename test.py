@@ -15,5 +15,16 @@ print("[TEST] GET /api/users/admin =>", r.status_code)
 
 r = requests.post(url + "/api/login", data={"user": "admin", "password": "admin"})
 print("[TEST] POST /api/login =>", r.status_code, r.cookies)
-cookie = r.cookies
-user = cookie.get("user")
+
+user_obj = {
+    "password": "nuevacontraseña"
+}
+
+r = requests.put(url + "/api/users/admin", data=user_obj)
+print("[TEST] PUT /api/users/admin =>", r.status_code, r.text)
+
+lista = [1,2,3,4]
+for numero in lista:
+        print(numero)
+
+

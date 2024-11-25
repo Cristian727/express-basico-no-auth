@@ -20,6 +20,7 @@ router.get('/users', (req, res) => {
 });
 
 router.get('/users/:user', (req, res) => {
+    //TODO cambiar el if else por un try catch!!!
     const user = req.params.user;
     const userObj = getUser(user);
     if (userObj) {
@@ -33,7 +34,7 @@ router.put('/users/:user', (req, res) => {
     const user = req.params.user;
     const password = req.body.password;
     try {
-        updateUser(user, password);
+        updateUser(user, new_user, password);
         res.status(200).send('Usuario actualizado');
     } catch (err) {
         res.status(500).send('Error al actualizar el usuario');
@@ -50,17 +51,7 @@ router.delete('/users/:user', (req, res) => {
     }
 });
 
-router.post('/register', (req, res) => {
-    const user = req.body.user;
-    const password = req.body.password;
-    const userObj = getUser(user);
-    if (userObj) {
-        res.status(409).send('Usuario ya existe');
-    } else {
-        createUser(user, password);
-        res.status(201).send('Usuario creado');
-    }
-});
+
 
 router.post('/login', (req, res) => {
     const user = req.body.user;
