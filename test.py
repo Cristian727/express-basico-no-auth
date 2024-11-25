@@ -1,6 +1,6 @@
 import requests
 
-url = "http://localhost:3000/"
+url = "http://localhost:3000"
 r = requests.get(url)
 print("[TEST] GET / =>", r.status_code)
 
