@@ -92,4 +92,10 @@ router.post('/logout', (req, res) => {
     });
 });
 
+// Ruta de perfil que saluda al usuario logeado
+router.get('/profile', isAuthenticated, (req, res) => {
+    const user = req.session.user; // Obtener el usuario de la sesión
+    res.status(200).send(`¡Hola, ${user}! Bienvenido a tu perfil.`);
+});
+
 module.exports = router;
