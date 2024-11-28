@@ -1,12 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const path = require('path');
 const { createUser, getUser, getAllUsers, updateUser, deleteUser, validateUser } = require('../database');
-const cookieParser = require('cookie-parser');
 
+// Middleware para verificar autenticación
+function isAuthenticated(req, res, next) {
+    if (req.session.user) {
+        next();
+    } else {
+        res.status(401).send('Acceso no autorizado');
+    }
+}
+
+// Crear un usuario
 router.post('/users', (req, res) => {
-    const user = req.body.user;
-    const password = req.body.password;
+    const { user, password } = req.body;
     try {
         createUser(user, password);
         res.status(201).send('Usuario creado');
@@ -15,24 +22,30 @@ router.post('/users', (req, res) => {
     }
 });
 
-router.get('/users', (req, res) => {
+// Obtener todos los usuarios
+router.get('/users', isAuthenticated, (req, res) => {
     res.json(getAllUsers());
 });
 
-router.get('/users/:user', (req, res) => {
-    //TODO cambiar el if else por un try catch!!!
+// Obtener un usuario por su nombre
+router.get('/users/:user', isAuthenticated, (req, res) => {
     const user = req.params.user;
-    const userObj = getUser(user);
-    if (userObj) {
-        res.json(userObj);
-    } else {
-        res.status(404).send('Usuario no encontrado');
+    try {
+        const userObj = getUser(user);
+        if (userObj) {
+            res.json(userObj);
+        } else {
+            res.status(404).send('Usuario no encontrado');
+        }
+    } catch (err) {
+        res.status(500).send('Error al buscar el usuario');
     }
 });
 
-router.put('/users/:user', (req, res) => {
+// Actualizar un usuario
+router.put('/users/:user', isAuthenticated, (req, res) => {
     const user = req.params.user;
-    const password = req.body.password;
+    const { new_user, password } = req.body;
     try {
         updateUser(user, new_user, password);
         res.status(200).send('Usuario actualizado');
@@ -41,7 +54,8 @@ router.put('/users/:user', (req, res) => {
     }
 });
 
-router.delete('/users/:user', (req, res) => {
+// Eliminar un usuario
+router.delete('/users/:user', isAuthenticated, (req, res) => {
     const user = req.params.user;
     try {
         deleteUser(user);
@@ -51,19 +65,31 @@ router.delete('/users/:user', (req, res) => {
     }
 });
 
-
-
+// Login de usuario
 router.post('/login', (req, res) => {
-    const user = req.body.user;
-    const password = req.body.password;
-    const userObj = getUser(user);
-    if (userObj && validateUser(user, password)) {
-        res.cookie('user', user);
-        res.status(200).send('Login correcto');
-    } else {
-        res.status(401).send('Login incorrecto');
+    const { user, password } = req.body;
+    try {
+        const userObj = getUser(user);
+        if (userObj && validateUser(user, password)) {
+            req.session.user = user; // Almacena el usuario en la sesión
+            res.status(200).send('Login correcto');
+        } else {
+            res.status(401).send('Login incorrecto');
+        }
+    } catch (err) {
+        res.status(500).send('Error en el servidor');
     }
 });
 
-module.exports = router;
+// Logout de usuario
+router.post('/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            return res.status(500).send('Error al cerrar sesión');
+        }
+        res.clearCookie('connect.sid'); // Limpia la cookie de sesión
+        res.status(200).send('Sesión cerrada');
+    });
+});
 
+module.exports = router;
